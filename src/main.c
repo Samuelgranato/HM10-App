@@ -21,6 +21,43 @@
 #define TASK_PROCESS_STACK_SIZE            (4096/sizeof(portSTACK_TYPE))
 #define TASK_PROCESS_STACK_PRIORITY        (tskIDLE_PRIORITY)
 
+//francato
+#define TASK_MM_STACK_SIZE                (1024/sizeof(portSTACK_TYPE))
+#define TASK_MM_STACK_PRIORITY            (tskIDLE_PRIORITY)
+
+volatile int delay_motor_passo = 3;
+
+volatile int delay_mm = 1000;
+
+#define BUT1_PIO      PIOA
+#define BUT1_PIO_ID   ID_PIOA
+#define BUT1_IDX  11
+#define BUT1_IDX_MASK (1 << BUT1_IDX)
+
+#define PINO1_MOTOR      PIOA
+#define PINO1_MOTOR_ID   ID_PIOA
+#define PINO1_MOTOR_IDX  19
+#define PINO1_MOTOR_IDX_MASK  (1 << PINO1_MOTOR_IDX)
+
+#define PINO2_MOTOR      PIOB
+#define PINO2_MOTOR_ID   ID_PIOB
+#define PINO2_MOTOR_IDX  2
+#define PINO2_MOTOR_IDX_MASK (1 << PINO2_MOTOR_IDX)
+
+#define PINO3_MOTOR      PIOC
+#define PINO3_MOTOR_ID   ID_PIOC
+#define PINO3_MOTOR_IDX  30
+#define PINO3_MOTOR_IDX_MASK (1 << PINO3_MOTOR_IDX)
+
+#define PINO4_MOTOR      PIOC
+#define PINO4_MOTOR_ID   ID_PIOC
+#define PINO4_MOTOR_IDX  17
+#define PINO4_MOTOR_IDX_MASK (1 << PINO4_MOTOR_IDX)
+
+
+SemaphoreHandle_t xSemaphore1;
+//francato
+
 extern void vApplicationStackOverflowHook(xTaskHandle *pxTask,
 		signed char *pcTaskName);
 extern void vApplicationIdleHook(void);
@@ -34,6 +71,11 @@ void but_callback(void);
 static void ECHO_init(void);
 static void USART1_init(void);
 uint32_t usart_puts(uint8_t *pstring);
+
+void but1_callBack(){
+	xSemaphoreGiveFromISR(xSemaphore1, NULL);
+	
+}
 
 
 QueueHandle_t xQueue1;
@@ -135,7 +177,63 @@ void io_init(void){
   // Configura led
 	pmc_enable_periph_clk(LED_PIO_ID);
 	pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT);
+	
+	/* led */
+	//pmc_enable_periph_clk(LED_PIO_ID);
+	//pio_configure(LED_PIO, PIO_OUTPUT_0, LED_IDX_MASK, PIO_DEFAULT);
+	pmc_enable_periph_clk(BUT1_PIO_ID);
+	
+	pio_configure(BUT1_PIO, PIO_INPUT, BUT1_IDX_MASK, PIO_PULLUP | PIO_DEBOUNCE);
+	
+	//pmc_enable_periph_clk(BUT1_PIO_ID);
+	pio_set_output(PINO1_MOTOR,PINO1_MOTOR_IDX_MASK,0,0,0);
+	pio_set_output(PINO2_MOTOR,PINO2_MOTOR_IDX_MASK,0,0,0);
+	pio_set_output(PINO3_MOTOR,PINO3_MOTOR_IDX_MASK,0,0,0);
+	pio_set_output(PINO4_MOTOR,PINO4_MOTOR_IDX_MASK,0,0,0);
+	
+	pio_handler_set(BUT1_PIO,
+	BUT1_PIO_ID,
+	BUT1_IDX_MASK,
+	PIO_IT_FALL_EDGE,
+	but1_callBack);
+	
+	pio_enable_interrupt(BUT1_PIO, BUT1_IDX_MASK);
+	
+	NVIC_EnableIRQ(BUT1_PIO_ID);
+	NVIC_SetPriority(BUT1_PIO_ID, 5);
 }
+
+void fechando_mm(){
+	pio_set(PINO4_MOTOR, PINO4_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO4_MOTOR, PINO4_MOTOR_IDX_MASK);
+	pio_set(PINO3_MOTOR, PINO3_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO3_MOTOR, PINO3_MOTOR_IDX_MASK);
+	pio_set(PINO2_MOTOR, PINO2_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO2_MOTOR, PINO2_MOTOR_IDX_MASK);
+	pio_set(PINO1_MOTOR, PINO1_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO1_MOTOR, PINO1_MOTOR_IDX_MASK);
+}
+
+/////////////////////
+void abrindo_mm(){
+	pio_set(PINO1_MOTOR, PINO1_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO1_MOTOR, PINO1_MOTOR_IDX_MASK);
+	pio_set(PINO2_MOTOR, PINO2_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO2_MOTOR, PINO2_MOTOR_IDX_MASK);
+	pio_set(PINO3_MOTOR, PINO3_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO3_MOTOR, PINO3_MOTOR_IDX_MASK);
+	pio_set(PINO4_MOTOR, PINO4_MOTOR_IDX_MASK);
+	vTaskDelay(delay_motor_passo);
+	pio_clear(PINO4_MOTOR, PINO4_MOTOR_IDX_MASK);
+}
+
 
 void usart_put_string(Usart *usart, char str[]) {
   usart_serial_write_packet(usart, str, strlen(str));
@@ -241,7 +339,7 @@ void task_bluetooth(void){
   printf("Bluetooth initializing \n");
   hc05_config_server();
   hc05_server_init();
-  io_init();
+  //io_init();
   
 	char buffer[1024];
 	
@@ -277,6 +375,26 @@ void task_bluetooth(void){
   }
 }
 
+static void task_mm(void *pvParameters)
+{
+	
+	xSemaphore1 = xSemaphoreCreateBinary();
+	io_init();
+	while(1) {
+		if( xSemaphoreTake(xSemaphore1, ( TickType_t ) 50) == pdTRUE ){
+			for (int i = 0; i<100; i++){
+				abrindo_mm();
+			}
+			vTaskDelay(delay_mm);
+			for (int j = 0; j<100; j++){
+				fechando_mm();
+			}
+			
+		}
+	}
+}
+
+
 /************************************************************************/
 /* main                                                                 */
 /************************************************************************/
@@ -288,9 +406,15 @@ int main(void){
 
 	/* Initialize the console uart */
 	configure_console();
+	
+	if (xTaskCreate(task_mm, "MM", TASK_MM_STACK_SIZE, NULL,TASK_MM_STACK_PRIORITY, NULL) != pdPASS) {
+		printf("Failed to create test led task\r\n");
+	}
 
 	/* Create task to make led blink */
 	xTaskCreate(task_bluetooth, "BLT", TASK_PROCESS_STACK_SIZE, NULL,	TASK_PROCESS_STACK_PRIORITY, NULL);
+	
+
   
 	/* Start the scheduler. */
 	vTaskStartScheduler();
