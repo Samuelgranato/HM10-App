@@ -1,7 +1,6 @@
-src/ASF/sam/drivers/pio/pio_handler.d \
- src/ASF/sam/drivers/pio/pio_handler.o: \
- ../src/ASF/sam/drivers/pio/pio_handler.c \
- ../src/ASF/sam/drivers/pio/pio.h ../src/ASF/sam/utils/compiler.h \
+src/ASF/sam/drivers/pwm/pwm.d src/ASF/sam/drivers/pwm/pwm.o: \
+ ../src/ASF/sam/drivers/pwm/pwm.c ../src/ASF/sam/drivers/pwm/pwm.h \
+ ../src/ASF/sam/utils/compiler.h \
  d:\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\lib\gcc\arm-none-eabi\6.3.1\include\stddef.h \
  ../src/ASF/common/utils/parts.h \
  ../src/ASF/sam/utils/preprocessor/preprocessor.h \
@@ -142,10 +141,9 @@ src/ASF/sam/drivers/pio/pio_handler.d \
  d:\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\machine\stdlib.h \
  d:\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\alloca.h \
  ../src/ASF/common/utils/interrupt.h \
- ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h \
- ../src/ASF/sam/drivers/pio/pio_handler.h
+ ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h
 
-../src/ASF/sam/drivers/pio/pio.h:
+../src/ASF/sam/drivers/pwm/pwm.h:
 
 ../src/ASF/sam/utils/compiler.h:
 
@@ -430,5 +428,3 @@ d:\atmel\studio\7.0\toolchain\arm\arm-gnu-toolchain\arm-none-eabi\include\alloca
 ../src/ASF/common/utils/interrupt.h:
 
 ../src/ASF/common/utils/interrupt/interrupt_sam_nvic.h:
-
-../src/ASF/sam/drivers/pio/pio_handler.h:
